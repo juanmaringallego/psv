@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Un viaje para Paulina</title>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Sacramento&display=swap');
+
+    /* ── Reset & Base ── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Quicksand', sans-serif;
+      background: #0b0b2b;
+      color: #f0e6ff;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* ── Stars canvas (background) ── */
+    #stars-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ── Sections common ── */
+    .screen {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.5rem;
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+
+    .screen.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .screen.hidden { display: none; }
+
+    /* ── SCREEN 1: Intro ── */
+    #intro {
+      text-align: center;
+      gap: 1.5rem;
+    }
+
+    #intro .sparkle-icon {
+      font-size: 3rem;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    #typing-text {
+      font-size: clamp(1.2rem, 4vw, 1.8rem);
+      font-weight: 500;
+      min-height: 3.5rem;
+      line-height: 1.6;
+      max-width: 500px;
+    }
+
+    .cursor-blink::after {
+      content: '|';
+      animation: blink 0.7s step-end infinite;
+      margin-left: 2px;
+      color: #c9a0ff;
+    }
+
+    .btn-magic {
+      display: inline-block;
+      padding: 0.9rem 2.4rem;
+      border: none;
+      border-radius: 50px;
+      font-family: 'Quicksand', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #fff;
+      background: linear-gradient(135deg, #a855f7, #6366f1);
+      cursor: pointer;
+      opacity: 0;
+      transform: scale(0.9);
+      transition: opacity 0.6s ease, transform 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 4px 25px rgba(168, 85, 247, 0.35);
+    }
+
+    .btn-magic.show {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .btn-magic:hover {
+      transform: scale(1.06);
+      box-shadow: 0 6px 35px rgba(168, 85, 247, 0.55);
+    }
+
+    .btn-magic:active { transform: scale(0.97); }
+
+    /* ── SCREEN 2: Map / Stops ── */
+    #map-screen {
+      gap: 1.5rem;
+      padding-top: 3rem;
+      padding-bottom: 3rem;
+    }
+
+    #map-screen h2 {
+      font-size: clamp(1.3rem, 4vw, 1.8rem);
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .stops-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.2rem;
+      width: 100%;
+      max-width: 900px;
+    }
+
+    @media (min-width: 700px) {
+      .stops-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    .stop-card {
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 2rem 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+
+    .stop-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 12px 40px rgba(168, 85, 247, 0.2);
+      border-color: rgba(168, 85, 247, 0.4);
+    }
+
+    .stop-card .icon { font-size: 2.5rem; margin-bottom: 0.8rem; }
+    .stop-card h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.4rem; }
+    .stop-card p { font-size: 0.88rem; opacity: 0.7; line-height: 1.5; }
+
+    /* ── Back button ── */
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.4rem;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 50px;
+      background: rgba(255,255,255,0.06);
+      color: #d4bfff;
+      font-family: 'Quicksand', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.3s, border-color 0.3s;
+      margin-top: 1rem;
+    }
+
+    .btn-back:hover {
+      background: rgba(255,255,255,0.12);
+      border-color: rgba(168,85,247,0.5);
+    }
+
+    /* ── STOP 1: Jardin ── */
+    #jardin-screen { gap: 1.5rem; }
+
+    #jardin-screen h2 {
+      font-size: clamp(1.3rem, 4vw, 1.7rem);
+      font-weight: 600;
+    }
+
+    .messages-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      width: 100%;
+      max-width: 500px;
+    }
+
+    .msg-card {
+      background: linear-gradient(135deg, rgba(168,85,247,0.15), rgba(99,102,241,0.12));
+      border: 1px solid rgba(168,85,247,0.2);
+      border-radius: 16px;
+      padding: 1.3rem 1.5rem;
+      font-size: 1.05rem;
+      line-height: 1.6;
+      text-align: center;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeUp 0.6s ease forwards;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .msg-card::before {
+      content: '';
+      position: absolute;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background: radial-gradient(circle, rgba(168,85,247,0.08) 0%, transparent 70%);
+      animation: shimmer 4s ease-in-out infinite;
+    }
+
+    .msg-card:nth-child(1) { animation-delay: 0.1s; }
+    .msg-card:nth-child(2) { animation-delay: 0.3s; }
+    .msg-card:nth-child(3) { animation-delay: 0.5s; }
+    .msg-card:nth-child(4) { animation-delay: 0.7s; }
+    .msg-card:nth-child(5) { animation-delay: 0.9s; }
+
+    /* floating hearts */
+    .floating-hearts {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .floating-hearts span {
+      position: absolute;
+      bottom: -40px;
+      font-size: 1.4rem;
+      animation: riseUp linear infinite;
+      opacity: 0.6;
+    }
+
+    /* ── STOP 2: Recuerdos ── */
+    #recuerdos-screen { gap: 1.5rem; }
+
+    #recuerdos-screen h2 {
+      font-size: clamp(1.3rem, 4vw, 1.7rem);
+      font-weight: 600;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.8rem;
+      width: 100%;
+      max-width: 460px;
+    }
+
+    .gallery-item {
+      background: rgba(255,255,255,0.07);
+      border-radius: 16px;
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.8rem;
+      border: 1px solid rgba(255,255,255,0.08);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: default;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .gallery-item:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 30px rgba(168,85,247,0.2);
+    }
+
+    .gallery-item .tooltip {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.7rem;
+      background: rgba(0,0,0,0.5);
+      padding: 0.25rem 0.6rem;
+      border-radius: 8px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      white-space: nowrap;
+    }
+
+    .gallery-item:hover .tooltip { opacity: 1; }
+
+    .btn-smile {
+      padding: 0.9rem 2rem;
+      border: none;
+      border-radius: 50px;
+      font-family: 'Quicksand', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+      background: linear-gradient(135deg, #ec4899, #f472b6);
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 4px 20px rgba(236, 72, 153, 0.3);
+      margin-top: 0.5rem;
+    }
+
+    .btn-smile:hover {
+      transform: scale(1.06);
+      box-shadow: 0 6px 30px rgba(236, 72, 153, 0.5);
+    }
+
+    .btn-smile:active { transform: scale(0.95); }
+
+    /* ── STOP 3: Boton sorpresa ── */
+    #sorpresa-screen { gap: 1.5rem; text-align: center; }
+
+    #sorpresa-screen h2 {
+      font-size: clamp(1.3rem, 4vw, 1.7rem);
+      font-weight: 600;
+    }
+
+    .surprise-btn-wrapper {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .btn-surprise {
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      border: 3px solid rgba(168,85,247,0.4);
+      background: linear-gradient(135deg, rgba(168,85,247,0.2), rgba(99,102,241,0.15));
+      color: #fff;
+      font-family: 'Quicksand', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+      box-shadow: 0 0 40px rgba(168,85,247,0.15);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      line-height: 1.4;
+    }
+
+    .btn-surprise .cloud-icon { font-size: 2rem; }
+
+    .btn-surprise:hover {
+      transform: scale(1.08);
+      box-shadow: 0 0 60px rgba(168,85,247,0.35);
+      border-color: rgba(168,85,247,0.7);
+    }
+
+    .btn-surprise:active { transform: scale(0.95); }
+
+    .btn-surprise.activated {
+      background: linear-gradient(135deg, rgba(251,191,36,0.3), rgba(168,85,247,0.2));
+      border-color: rgba(251,191,36,0.6);
+      box-shadow: 0 0 60px rgba(251,191,36,0.25);
+    }
+
+    .surprise-message {
+      font-size: 1.1rem;
+      line-height: 1.6;
+      max-width: 400px;
+      min-height: 3rem;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .surprise-message.show { opacity: 1; }
+
+    /* ── SCREEN FINAL: Mision cumplida ── */
+    #final-screen {
+      text-align: center;
+      gap: 1rem;
+    }
+
+    .final-badge {
+      font-size: 4rem;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    #final-screen h2 {
+      font-size: clamp(1.5rem, 5vw, 2.2rem);
+      font-weight: 700;
+      background: linear-gradient(135deg, #a855f7, #f472b6, #fbbf24);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    #final-screen .final-text {
+      font-size: clamp(1rem, 3vw, 1.25rem);
+      line-height: 1.8;
+      max-width: 480px;
+      opacity: 0.9;
+    }
+
+    #final-screen .final-small {
+      font-size: 0.9rem;
+      opacity: 0.55;
+      margin-top: 1rem;
+      font-style: italic;
+    }
+
+    .mission-check {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1.5rem;
+      background: rgba(74, 222, 128, 0.15);
+      border: 1px solid rgba(74, 222, 128, 0.3);
+      border-radius: 50px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #86efac;
+    }
+
+    /* ── Progress indicator ── */
+    .progress-bar {
+      position: fixed;
+      top: 0; left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #a855f7, #f472b6);
+      z-index: 100;
+      transition: width 0.5s ease;
+      border-radius: 0 2px 2px 0;
+    }
+
+    /* visited markers */
+    .visit-markers {
+      display: flex;
+      gap: 0.6rem;
+      margin-top: 0.5rem;
+    }
+
+    .visit-marker {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      transition: background 0.4s ease;
+    }
+
+    .visit-marker.done { background: #a855f7; }
+
+    /* ── Animations ── */
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
+    }
+
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes shimmer {
+      0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+      50% { transform: translate(-30%, -30%) rotate(10deg); }
+    }
+
+    @keyframes riseUp {
+      0% { transform: translateY(0) rotate(0deg); opacity: 0.7; }
+      100% { transform: translateY(-110vh) rotate(40deg); opacity: 0; }
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(168,85,247,0.2); }
+      50% { box-shadow: 0 0 40px rgba(168,85,247,0.4); }
+    }
+
+    /* ── Responsive tweaks ── */
+    @media (max-width: 480px) {
+      .stop-card { padding: 1.5rem 1.2rem; }
+      .btn-surprise { width: 150px; height: 150px; font-size: 0.9rem; }
+      .gallery { gap: 0.6rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Stars background -->
+  <canvas id="stars-canvas"></canvas>
+
+  <!-- Progress bar -->
+  <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
+
+  <!-- ════ SCREEN 1: Intro ════ -->
+  <section class="screen visible" id="intro">
+    <div class="sparkle-icon">&#10024;</div>
+    <div id="typing-text" class="cursor-blink"></div>
+    <button class="btn-magic" id="btn-enter" onclick="goToMap()">Entrar al viaje</button>
+  </section>
+
+  <!-- ════ SCREEN 2: Map ════ -->
+  <section class="screen hidden" id="map-screen">
+    <h2>Elige una parada del viaje &#128506;</h2>
+    <div class="visit-markers" id="visit-markers">
+      <div class="visit-marker" data-stop="jardin"></div>
+      <div class="visit-marker" data-stop="recuerdos"></div>
+      <div class="visit-marker" data-stop="sorpresa"></div>
+    </div>
+    <div class="stops-grid">
+      <div class="stop-card" onclick="goToStop('jardin')">
+        <div class="icon">&#127803;</div>
+        <h3>Jardin de cosas bonitas</h3>
+        <p>Mensajes que florecen solo para ti.</p>
+      </div>
+      <div class="stop-card" onclick="goToStop('recuerdos')">
+        <div class="icon">&#128248;</div>
+        <h3>Sala de recuerdos felices</h3>
+        <p>Un rincon para sonreir sin razon.</p>
+      </div>
+      <div class="stop-card" onclick="goToStop('sorpresa')">
+        <div class="icon">&#127873;</div>
+        <h3>Boton sorpresa</h3>
+        <p>Porque los dias grises necesitan magia.</p>
+      </div>
+    </div>
+    <button class="btn-magic show" id="btn-final" style="display:none;" onclick="goToFinal()">
+      Completar la mision &#10024;
+    </button>
+  </section>
+
+  <!-- ════ STOP 1: Jardin ════ -->
+  <section class="screen hidden" id="jardin-screen">
+    <h2>&#127803; Jardin de cosas bonitas</h2>
+    <div class="messages-container" id="jardin-messages"></div>
+    <button class="btn-back" onclick="backToMap()">&#8592; Volver al mapa</button>
+    <div class="floating-hearts" id="floating-hearts"></div>
+  </section>
+
+  <!-- ════ STOP 2: Recuerdos ════ -->
+  <section class="screen hidden" id="recuerdos-screen">
+    <h2>&#128248; Sala de recuerdos felices</h2>
+    <div class="gallery" id="gallery"></div>
+    <button class="btn-smile" onclick="launchSmileConfetti()">
+      Presiona aqui si necesitas sonreir &#128150;
+    </button>
+    <button class="btn-back" onclick="backToMap()">&#8592; Volver al mapa</button>
+  </section>
+
+  <!-- ════ STOP 3: Sorpresa ════ -->
+  <section class="screen hidden" id="sorpresa-screen">
+    <h2>&#9729;&#65039; El boton anti-dias grises</h2>
+    <div class="surprise-btn-wrapper">
+      <button class="btn-surprise" id="btn-surprise" onclick="triggerSurprise()">
+        <span class="cloud-icon">&#9729;&#65039;</span>
+        <span>Boton anti-dias<br>grises de Paulina</span>
+      </button>
+      <div class="surprise-message" id="surprise-msg"></div>
+    </div>
+    <button class="btn-back" onclick="backToMap()">&#8592; Volver al mapa</button>
+  </section>
+
+  <!-- ════ SCREEN FINAL ════ -->
+  <section class="screen hidden" id="final-screen">
+    <div class="final-badge">&#11088;</div>
+    <div class="mission-check">&#10004; Mision completada</div>
+    <h2>La sonrisa de Paulina fue encontrada</h2>
+    <p class="final-text">
+      ...y siempre estuvo con ella &#128522;<br><br>
+      A veces solo necesitamos que alguien nos recuerde<br>
+      lo increibles que somos.
+    </p>
+    <p class="final-small">Hice esto solo para sacarte una sonrisa.</p>
+  </section>
+
+  <script>
+    /* ═══════════════════════════════════
+       STARS BACKGROUND
+    ═══════════════════════════════════ */
+    const canvas = document.getElementById('stars-canvas');
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    function createStars() {
+      stars = [];
+      const count = Math.floor((canvas.width * canvas.height) / 4000);
+      for (let i = 0; i < count; i++) {
+        stars.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          r: Math.random() * 1.5 + 0.3,
+          alpha: Math.random(),
+          da: (Math.random() - 0.5) * 0.015
+        });
+      }
+    }
+
+    function drawStars() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (const s of stars) {
+        s.alpha += s.da;
+        if (s.alpha <= 0.1 || s.alpha >= 1) s.da *= -1;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(220, 200, 255, ${s.alpha})`;
+        ctx.fill();
+      }
+      requestAnimationFrame(drawStars);
+    }
+
+    resizeCanvas();
+    createStars();
+    drawStars();
+    window.addEventListener('resize', () => { resizeCanvas(); createStars(); });
+
+    /* ═══════════════════════════════════
+       TYPING EFFECT
+    ═══════════════════════════════════ */
+    const typingEl = document.getElementById('typing-text');
+    const fullText = 'Hola Paulina\u2026 esto es una misi\u00f3n especial \ud83d\ude0a';
+    let charIndex = 0;
+
+    function typeChar() {
+      if (charIndex < fullText.length) {
+        typingEl.textContent += fullText[charIndex];
+        charIndex++;
+        setTimeout(typeChar, 65);
+      } else {
+        typingEl.classList.remove('cursor-blink');
+        document.getElementById('btn-enter').classList.add('show');
+      }
+    }
+
+    setTimeout(typeChar, 800);
+
+    /* ═══════════════════════════════════
+       NAVIGATION
+    ═══════════════════════════════════ */
+    const visited = new Set();
+    let currentScreen = 'intro';
+
+    function showScreen(id) {
+      const prev = document.getElementById(currentScreen);
+      prev.classList.remove('visible');
+      setTimeout(() => {
+        prev.classList.add('hidden');
+        const next = document.getElementById(id);
+        next.classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'instant' });
+        requestAnimationFrame(() => {
+          next.classList.add('visible');
+        });
+        currentScreen = id;
+        updateProgress();
+      }, 400);
+    }
+
+    function goToMap() {
+      showScreen('map-screen');
+      updateProgress();
+    }
+
+    function goToStop(stop) {
+      visited.add(stop);
+      updateMarkers();
+      if (stop === 'jardin') {
+        showScreen('jardin-screen');
+        populateJardin();
+        startFloatingHearts();
+      } else if (stop === 'recuerdos') {
+        showScreen('recuerdos-screen');
+        populateGallery();
+      } else if (stop === 'sorpresa') {
+        showScreen('sorpresa-screen');
+      }
+    }
+
+    function backToMap() {
+      stopFloatingHearts();
+      showScreen('map-screen');
+      checkAllVisited();
+    }
+
+    function goToFinal() {
+      showScreen('final-screen');
+      updateProgress();
+      setTimeout(() => {
+        launchFinalCelebration();
+      }, 600);
+    }
+
+    function updateProgress() {
+      const bar = document.getElementById('progress-bar');
+      const total = 5; // intro, map, 3 stops
+      let count = 1; // intro always done
+      if (currentScreen !== 'intro') count++;
+      count += visited.size;
+      bar.style.width = Math.min((count / total) * 100, 100) + '%';
+    }
+
+    function updateMarkers() {
+      document.querySelectorAll('.visit-marker').forEach(m => {
+        if (visited.has(m.dataset.stop)) m.classList.add('done');
+      });
+    }
+
+    function checkAllVisited() {
+      if (visited.size >= 3) {
+        const btn = document.getElementById('btn-final');
+        btn.style.display = 'inline-block';
+      }
+    }
+
+    /* ═══════════════════════════════════
+       STOP 1: JARDIN
+    ═══════════════════════════════════ */
+    const jardinMessages = [
+      'Tu sonrisa tiene poderes secretos \u2728',
+      'Hablar contigo alegra cualquier d\u00eda.',
+      'Eres m\u00e1s especial de lo que imaginas.',
+      'El mundo es un poco mejor porque t\u00fa est\u00e1s en \u00e9l \ud83c\udf3c',
+      'Mereces todos los d\u00edas bonitos del mundo.'
+    ];
+
+    let jardinPopulated = false;
+
+    function populateJardin() {
+      if (jardinPopulated) return;
+      jardinPopulated = true;
+      const container = document.getElementById('jardin-messages');
+      jardinMessages.forEach((msg) => {
+        const card = document.createElement('div');
+        card.className = 'msg-card';
+        card.textContent = msg;
+        container.appendChild(card);
+      });
+    }
+
+    /* Floating hearts */
+    let heartsInterval = null;
+
+    function startFloatingHearts() {
+      const container = document.getElementById('floating-hearts');
+      const emojis = ['\u2764\ufe0f', '\ud83c\udf38', '\ud83c\udf3c', '\u2728', '\ud83e\udde1', '\ud83d\udc9c'];
+      heartsInterval = setInterval(() => {
+        const span = document.createElement('span');
+        span.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        span.style.left = Math.random() * 100 + '%';
+        span.style.animationDuration = (5 + Math.random() * 5) + 's';
+        container.appendChild(span);
+        setTimeout(() => span.remove(), 10000);
+      }, 500);
+    }
+
+    function stopFloatingHearts() {
+      if (heartsInterval) {
+        clearInterval(heartsInterval);
+        heartsInterval = null;
+      }
+      const container = document.getElementById('floating-hearts');
+      container.innerHTML = '';
+    }
+
+    /* ═══════════════════════════════════
+       STOP 2: RECUERDOS
+    ═══════════════════════════════════ */
+    const galleryItems = [
+      { emoji: '\ud83c\udf1e', label: 'Dias soleados' },
+      { emoji: '\ud83c\udf68', label: 'Helado favorito' },
+      { emoji: '\ud83c\udfb6', label: 'Tu cancion' },
+      { emoji: '\ud83d\ude3a', label: 'Gatitos' },
+      { emoji: '\ud83c\udf08', label: 'Arcoiris' },
+      { emoji: '\ud83c\udf19', label: 'Noches bonitas' }
+    ];
+
+    let galleryPopulated = false;
+
+    function populateGallery() {
+      if (galleryPopulated) return;
+      galleryPopulated = true;
+      const container = document.getElementById('gallery');
+      galleryItems.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'gallery-item';
+        div.innerHTML = `${item.emoji}<span class="tooltip">${item.label}</span>`;
+        container.appendChild(div);
+      });
+    }
+
+    function launchSmileConfetti() {
+      // Hearts confetti
+      const defaults = { spread: 360, ticks: 80, gravity: 0.4, decay: 0.94, startVelocity: 20 };
+      const shapes = ['circle'];
+
+      function shoot() {
+        confetti({ ...defaults, particleCount: 30, scalar: 1.2, shapes, colors: ['#ff6b9d', '#c084fc', '#fbbf24', '#f472b6'] });
+        confetti({ ...defaults, particleCount: 15, scalar: 0.8, shapes, colors: ['#ff6b9d', '#a855f7', '#fbbf24'] });
+      }
+
+      shoot();
+      setTimeout(shoot, 150);
+      setTimeout(shoot, 300);
+    }
+
+    /* ═══════════════════════════════════
+       STOP 3: SORPRESA
+    ═══════════════════════════════════ */
+    const surpriseMessages = [
+      'Paulina, se te acaba de recargar la energ\u00eda bonita al 100% \u26a1',
+      '\u00a1Alerta! Se detect\u00f3 una persona incre\u00edble leyendo esto \ud83d\udea8\u2728',
+      'Dato cient\u00edfico: sonre\u00edr leyendo esto te hace 73% m\u00e1s cool \ud83d\ude0e',
+      'El universo dice: Paulina merece un d\u00eda hermoso. Y el universo no se equivoca \ud83c\udf0c',
+      'Tu nivel de genialidad est\u00e1 por las nubes hoy \u2601\ufe0f\u2728',
+      'Recordatorio: eres la protagonista de una historia muy bonita \ud83d\udcab'
+    ];
+
+    let surpriseIndex = 0;
+
+    function triggerSurprise() {
+      const btn = document.getElementById('btn-surprise');
+      const msgEl = document.getElementById('surprise-msg');
+
+      btn.classList.add('activated');
+
+      // Quick star burst
+      confetti({
+        particleCount: 50,
+        spread: 80,
+        origin: { y: 0.6 },
+        colors: ['#a855f7', '#fbbf24', '#f472b6', '#38bdf8'],
+        ticks: 60,
+        gravity: 0.6
+      });
+
+      msgEl.classList.remove('show');
+      setTimeout(() => {
+        msgEl.textContent = surpriseMessages[surpriseIndex % surpriseMessages.length];
+        msgEl.classList.add('show');
+        surpriseIndex++;
+      }, 200);
+
+      setTimeout(() => btn.classList.remove('activated'), 600);
+    }
+
+    /* ═══════════════════════════════════
+       FINAL CELEBRATION
+    ═══════════════════════════════════ */
+    function launchFinalCelebration() {
+      const duration = 3000;
+      const end = Date.now() + duration;
+      const colors = ['#a855f7', '#f472b6', '#fbbf24', '#38bdf8', '#4ade80'];
+
+      (function frame() {
+        confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 }, colors });
+        confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 }, colors });
+        if (Date.now() < end) requestAnimationFrame(frame);
+      })();
+    }
+  </script>
+</body>
+</html>
