@@ -37,7 +37,7 @@ const bootSequence = [
 
 // Projects list
 const projects = [
-  { icon: '\uD83D\uDC9C', name: '/paulina', desc: 'Algo especial', url: '/paulina' },
+  { icon: '\uD83D\uDEE0\uFE0F', name: '/proyectos', desc: 'Proximamente', url: '#' },
 ];
 
 // Fortune messages (random dev humor)
