@@ -6,22 +6,21 @@
   <title>Un viaje para Paulina</title>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Sacramento&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
 
     /* ── Reset & Base ── */
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
     html { scroll-behavior: smooth; }
 
     body {
-      font-family: 'Quicksand', sans-serif;
-      background: #0b0b2b;
-      color: #f0e6ff;
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: #060612;
+      color: #e8e0f0;
       overflow-x: hidden;
       min-height: 100vh;
     }
 
-    /* ── Stars canvas (background) ── */
+    /* ── Stars canvas ── */
     #stars-canvas {
       position: fixed;
       top: 0; left: 0;
@@ -30,7 +29,38 @@
       pointer-events: none;
     }
 
-    /* ── Sections common ── */
+    /* ── Ambient glow blobs ── */
+    .ambient {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.4;
+    }
+
+    .ambient-1 {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, #7c3aed, transparent 70%);
+      top: -10%; left: -10%;
+      animation: ambientDrift1 20s ease-in-out infinite;
+    }
+
+    .ambient-2 {
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, #ec4899, transparent 70%);
+      bottom: -10%; right: -10%;
+      animation: ambientDrift2 25s ease-in-out infinite;
+    }
+
+    .ambient-3 {
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, #3b82f6, transparent 70%);
+      top: 40%; left: 50%;
+      animation: ambientDrift3 18s ease-in-out infinite;
+    }
+
+    /* ── Sections ── */
     .screen {
       position: relative;
       z-index: 1;
@@ -41,90 +71,153 @@
       justify-content: center;
       padding: 2rem 1.5rem;
       opacity: 0;
-      transform: translateY(30px);
-      transition: opacity 0.8s ease, transform 0.8s ease;
+      transform: translateY(40px) scale(0.98);
+      transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), transform 1s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .screen.visible {
       opacity: 1;
-      transform: translateY(0);
+      transform: translateY(0) scale(1);
     }
 
     .screen.hidden { display: none; }
 
-    /* ── SCREEN 1: Intro ── */
-    #intro {
-      text-align: center;
-      gap: 1.5rem;
+    /* ── Progress bar ── */
+    .progress-bar {
+      position: fixed;
+      top: 0; left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #7c3aed, #ec4899, #f59e0b);
+      z-index: 100;
+      transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 0 15px rgba(124, 58, 237, 0.5);
     }
 
-    #intro .sparkle-icon {
-      font-size: 3rem;
-      animation: float 3s ease-in-out infinite;
+    /* ══════════════════════════════════
+       SCREEN 1: INTRO
+    ══════════════════════════════════ */
+    #intro {
+      text-align: center;
+      gap: 2rem;
+    }
+
+    .intro-orb {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #a78bfa, #7c3aed 50%, #4c1d95);
+      box-shadow:
+        0 0 40px rgba(124, 58, 237, 0.4),
+        0 0 80px rgba(124, 58, 237, 0.2),
+        inset 0 0 30px rgba(255, 255, 255, 0.1);
+      animation: orbFloat 4s ease-in-out infinite, orbGlow 3s ease-in-out infinite alternate;
     }
 
     #typing-text {
-      font-size: clamp(1.2rem, 4vw, 1.8rem);
-      font-weight: 500;
-      min-height: 3.5rem;
-      line-height: 1.6;
+      font-size: clamp(1.3rem, 4vw, 2rem);
+      font-weight: 300;
+      min-height: 4rem;
+      line-height: 1.7;
       max-width: 500px;
+      letter-spacing: -0.01em;
     }
 
     .cursor-blink::after {
       content: '|';
-      animation: blink 0.7s step-end infinite;
+      animation: blink 0.8s step-end infinite;
       margin-left: 2px;
-      color: #c9a0ff;
+      color: #a78bfa;
+      font-weight: 200;
     }
 
     .btn-magic {
-      display: inline-block;
-      padding: 0.9rem 2.4rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 1rem 2.8rem;
       border: none;
-      border-radius: 50px;
-      font-family: 'Quicksand', sans-serif;
-      font-size: 1.05rem;
+      border-radius: 60px;
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
       font-weight: 600;
       color: #fff;
-      background: linear-gradient(135deg, #a855f7, #6366f1);
+      background: linear-gradient(135deg, #7c3aed, #a855f7);
       cursor: pointer;
       opacity: 0;
-      transform: scale(0.9);
-      transition: opacity 0.6s ease, transform 0.3s ease, box-shadow 0.3s ease;
-      box-shadow: 0 4px 25px rgba(168, 85, 247, 0.35);
+      transform: translateY(10px);
+      transition: opacity 0.8s ease, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+      box-shadow:
+        0 4px 20px rgba(124, 58, 237, 0.4),
+        0 1px 3px rgba(0, 0, 0, 0.2);
+      letter-spacing: 0.02em;
     }
 
     .btn-magic.show {
       opacity: 1;
-      transform: scale(1);
+      transform: translateY(0);
     }
 
     .btn-magic:hover {
-      transform: scale(1.06);
-      box-shadow: 0 6px 35px rgba(168, 85, 247, 0.55);
+      transform: translateY(-2px);
+      box-shadow:
+        0 8px 35px rgba(124, 58, 237, 0.5),
+        0 2px 6px rgba(0, 0, 0, 0.2);
     }
 
-    .btn-magic:active { transform: scale(0.97); }
+    .btn-magic:active {
+      transform: translateY(0) scale(0.98);
+    }
 
-    /* ── SCREEN 2: Map / Stops ── */
+    /* ══════════════════════════════════
+       SCREEN 2: MAP
+    ══════════════════════════════════ */
     #map-screen {
-      gap: 1.5rem;
+      gap: 2rem;
       padding-top: 3rem;
       padding-bottom: 3rem;
     }
 
-    #map-screen h2 {
-      font-size: clamp(1.3rem, 4vw, 1.8rem);
-      font-weight: 600;
+    .map-header {
       text-align: center;
-      margin-bottom: 0.5rem;
+    }
+
+    .map-header h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.5rem, 4.5vw, 2.2rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.6rem;
+    }
+
+    .map-subtitle {
+      font-size: 0.9rem;
+      color: rgba(232, 224, 240, 0.5);
+      font-weight: 400;
+    }
+
+    .visit-markers {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .visit-marker {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .visit-marker.done {
+      background: #7c3aed;
+      border-color: #a78bfa;
+      box-shadow: 0 0 10px rgba(124, 58, 237, 0.5);
     }
 
     .stops-grid {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 1.2rem;
+      gap: 1rem;
       width: 100%;
       max-width: 900px;
     }
@@ -134,96 +227,134 @@
     }
 
     .stop-card {
-      background: rgba(255, 255, 255, 0.06);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 20px;
-      padding: 2rem 1.5rem;
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 24px;
+      padding: 2.2rem 1.8rem;
       text-align: center;
       cursor: pointer;
-      transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
     }
+
+    .stop-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.08), transparent 60%);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      border-radius: 24px;
+    }
+
+    .stop-card:hover::before { opacity: 1; }
 
     .stop-card:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 12px 40px rgba(168, 85, 247, 0.2);
-      border-color: rgba(168, 85, 247, 0.4);
+      transform: translateY(-8px);
+      border-color: rgba(124, 58, 237, 0.3);
+      box-shadow: 0 20px 60px rgba(124, 58, 237, 0.15), 0 0 0 1px rgba(124, 58, 237, 0.1);
     }
 
-    .stop-card .icon { font-size: 2.5rem; margin-bottom: 0.8rem; }
-    .stop-card h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.4rem; }
-    .stop-card p { font-size: 0.88rem; opacity: 0.7; line-height: 1.5; }
+    .stop-card .icon {
+      font-size: 2.8rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .stop-card h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.01em;
+    }
+
+    .stop-card p {
+      font-size: 0.85rem;
+      color: rgba(232, 224, 240, 0.5);
+      line-height: 1.5;
+      font-weight: 400;
+    }
 
     /* ── Back button ── */
     .btn-back {
       display: inline-flex;
       align-items: center;
-      gap: 0.4rem;
-      padding: 0.55rem 1.4rem;
-      border: 1px solid rgba(255,255,255,0.2);
+      gap: 0.5rem;
+      padding: 0.6rem 1.6rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 50px;
-      background: rgba(255,255,255,0.06);
-      color: #d4bfff;
-      font-family: 'Quicksand', sans-serif;
-      font-size: 0.9rem;
+      background: rgba(255, 255, 255, 0.04);
+      color: rgba(232, 224, 240, 0.7);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
       font-weight: 500;
       cursor: pointer;
-      transition: background 0.3s, border-color 0.3s;
-      margin-top: 1rem;
+      transition: all 0.3s ease;
+      margin-top: 1.5rem;
+      letter-spacing: 0.01em;
     }
 
     .btn-back:hover {
-      background: rgba(255,255,255,0.12);
-      border-color: rgba(168,85,247,0.5);
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(124, 58, 237, 0.4);
+      color: #e8e0f0;
     }
 
-    /* ── STOP 1: Jardin ── */
-    #jardin-screen { gap: 1.5rem; }
+    /* ══════════════════════════════════
+       STOP 1: JARDIN
+    ══════════════════════════════════ */
+    #jardin-screen { gap: 1.8rem; }
 
     #jardin-screen h2 {
-      font-size: clamp(1.3rem, 4vw, 1.7rem);
-      font-weight: 600;
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.4rem, 4vw, 1.8rem);
+      font-weight: 700;
     }
 
     .messages-container {
       display: flex;
       flex-direction: column;
-      gap: 1rem;
+      gap: 0.8rem;
       width: 100%;
-      max-width: 500px;
+      max-width: 480px;
     }
 
     .msg-card {
-      background: linear-gradient(135deg, rgba(168,85,247,0.15), rgba(99,102,241,0.12));
-      border: 1px solid rgba(168,85,247,0.2);
-      border-radius: 16px;
-      padding: 1.3rem 1.5rem;
-      font-size: 1.05rem;
-      line-height: 1.6;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 18px;
+      padding: 1.4rem 1.6rem;
+      font-size: 1rem;
+      line-height: 1.7;
       text-align: center;
+      font-weight: 400;
       opacity: 0;
-      transform: translateY(20px);
-      animation: fadeUp 0.6s ease forwards;
+      transform: translateY(25px);
+      animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
       position: relative;
       overflow: hidden;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
     }
 
     .msg-card::before {
       content: '';
       position: absolute;
-      top: -50%; left: -50%;
-      width: 200%; height: 200%;
-      background: radial-gradient(circle, rgba(168,85,247,0.08) 0%, transparent 70%);
-      animation: shimmer 4s ease-in-out infinite;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(124, 58, 237, 0.3), transparent);
     }
 
     .msg-card:nth-child(1) { animation-delay: 0.1s; }
-    .msg-card:nth-child(2) { animation-delay: 0.3s; }
-    .msg-card:nth-child(3) { animation-delay: 0.5s; }
-    .msg-card:nth-child(4) { animation-delay: 0.7s; }
-    .msg-card:nth-child(5) { animation-delay: 0.9s; }
+    .msg-card:nth-child(2) { animation-delay: 0.25s; }
+    .msg-card:nth-child(3) { animation-delay: 0.4s; }
+    .msg-card:nth-child(4) { animation-delay: 0.55s; }
+    .msg-card:nth-child(5) { animation-delay: 0.7s; }
 
-    /* floating hearts */
     .floating-hearts {
       position: fixed;
       top: 0; left: 0;
@@ -236,32 +367,36 @@
     .floating-hearts span {
       position: absolute;
       bottom: -40px;
-      font-size: 1.4rem;
+      font-size: 1.2rem;
       animation: riseUp linear infinite;
-      opacity: 0.6;
+      opacity: 0.5;
     }
 
-    /* ── STOP 2: Mini-juego de memoria ── */
-    #minigame-screen { gap: 1.2rem; }
+    /* ══════════════════════════════════
+       STOP 2: MEMORY GAME
+    ══════════════════════════════════ */
+    #minigame-screen { gap: 1.4rem; }
 
     #minigame-screen h2 {
-      font-size: clamp(1.3rem, 4vw, 1.7rem);
-      font-weight: 600;
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.4rem, 4vw, 1.8rem);
+      font-weight: 700;
     }
 
     .game-info {
       display: flex;
       align-items: center;
-      gap: 1.5rem;
-      font-size: 0.95rem;
+      gap: 1rem;
+      font-size: 0.88rem;
       font-weight: 500;
     }
 
     .game-info span {
-      background: rgba(255,255,255,0.08);
-      padding: 0.4rem 1rem;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 0.5rem 1.2rem;
       border-radius: 50px;
-      border: 1px solid rgba(255,255,255,0.1);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      letter-spacing: 0.01em;
     }
 
     .memory-grid {
@@ -274,32 +409,29 @@
 
     .memory-card {
       aspect-ratio: 1;
-      border-radius: 14px;
+      border-radius: 16px;
       cursor: pointer;
       position: relative;
       transform-style: preserve-3d;
-      transition: transform 0.5s ease;
+      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .memory-card.flipped {
-      transform: rotateY(180deg);
-    }
-
+    .memory-card.flipped { transform: rotateY(180deg); }
     .memory-card.matched {
       transform: rotateY(180deg);
       pointer-events: none;
     }
 
     .memory-card.matched .card-back {
-      border-color: rgba(74, 222, 128, 0.5);
-      box-shadow: 0 0 20px rgba(74, 222, 128, 0.2);
+      border-color: rgba(74, 222, 128, 0.4);
+      box-shadow: 0 0 25px rgba(74, 222, 128, 0.15);
     }
 
     .card-front, .card-back {
       position: absolute;
       top: 0; left: 0;
       width: 100%; height: 100%;
-      border-radius: 14px;
+      border-radius: 16px;
       backface-visibility: hidden;
       display: flex;
       align-items: center;
@@ -307,34 +439,32 @@
     }
 
     .card-front {
-      background: linear-gradient(135deg, rgba(168,85,247,0.3), rgba(99,102,241,0.25));
-      border: 1px solid rgba(168,85,247,0.3);
-      font-size: 1.5rem;
-      color: #c9a0ff;
+      background: linear-gradient(145deg, rgba(124, 58, 237, 0.25), rgba(99, 102, 241, 0.15));
+      border: 1px solid rgba(124, 58, 237, 0.2);
     }
 
     .card-front::after {
       content: '?';
-      font-size: 1.8rem;
+      font-size: 1.6rem;
       font-weight: 700;
-      opacity: 0.6;
+      color: rgba(167, 139, 250, 0.5);
     }
 
     .card-back {
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       transform: rotateY(180deg);
       font-size: 2rem;
     }
 
     .game-message {
-      font-size: 1.1rem;
+      font-size: 1.05rem;
       font-weight: 600;
       min-height: 2rem;
       text-align: center;
       opacity: 0;
-      transition: opacity 0.4s ease;
-      background: linear-gradient(135deg, #a855f7, #f472b6);
+      transition: opacity 0.5s ease;
+      background: linear-gradient(135deg, #a78bfa, #f472b6);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -343,123 +473,108 @@
     .game-message.show { opacity: 1; }
 
     .btn-restart {
-      padding: 0.7rem 1.8rem;
+      padding: 0.7rem 2rem;
       border: none;
       border-radius: 50px;
-      font-family: 'Quicksand', sans-serif;
-      font-size: 0.95rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
       font-weight: 600;
       color: #fff;
       background: linear-gradient(135deg, #ec4899, #f472b6);
       cursor: pointer;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       box-shadow: 0 4px 20px rgba(236, 72, 153, 0.3);
       display: none;
     }
 
     .btn-restart:hover {
-      transform: scale(1.06);
-      box-shadow: 0 6px 30px rgba(236, 72, 153, 0.5);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(236, 72, 153, 0.4);
     }
 
-    .btn-restart:active { transform: scale(0.95); }
+    .btn-restart:active { transform: translateY(0) scale(0.98); }
 
-    /* ── STOP 3: Boton sorpresa ── */
-    #sorpresa-screen { gap: 1.5rem; text-align: center; }
+    /* ══════════════════════════════════
+       STOP 3: SURPRISE
+    ══════════════════════════════════ */
+    #sorpresa-screen { gap: 2rem; text-align: center; }
 
     #sorpresa-screen h2 {
-      font-size: clamp(1.3rem, 4vw, 1.7rem);
-      font-weight: 600;
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.4rem, 4vw, 1.8rem);
+      font-weight: 700;
     }
 
     .surprise-btn-wrapper {
-      position: relative;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 1rem;
+      gap: 1.5rem;
     }
 
     .btn-surprise {
       width: 180px;
       height: 180px;
       border-radius: 50%;
-      border: 3px solid rgba(168,85,247,0.4);
-      background: linear-gradient(135deg, rgba(168,85,247,0.2), rgba(99,102,241,0.15));
+      border: 2px solid rgba(124, 58, 237, 0.3);
+      background: radial-gradient(circle at 40% 40%, rgba(124, 58, 237, 0.2), rgba(99, 102, 241, 0.08));
       color: #fff;
-      font-family: 'Quicksand', sans-serif;
-      font-size: 1rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
       font-weight: 600;
       cursor: pointer;
-      transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-      box-shadow: 0 0 40px rgba(168,85,247,0.15);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 0 50px rgba(124, 58, 237, 0.1);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 0.5rem;
+      gap: 0.6rem;
       line-height: 1.4;
+      animation: pulseGlow 3s ease-in-out infinite;
+      letter-spacing: 0.01em;
     }
 
-    .btn-surprise .cloud-icon { font-size: 2rem; }
+    .btn-surprise .cloud-icon { font-size: 2.2rem; }
 
     .btn-surprise:hover {
       transform: scale(1.08);
-      box-shadow: 0 0 60px rgba(168,85,247,0.35);
-      border-color: rgba(168,85,247,0.7);
+      box-shadow: 0 0 70px rgba(124, 58, 237, 0.3);
+      border-color: rgba(124, 58, 237, 0.6);
     }
 
     .btn-surprise:active { transform: scale(0.95); }
 
     .btn-surprise.activated {
-      background: linear-gradient(135deg, rgba(251,191,36,0.3), rgba(168,85,247,0.2));
-      border-color: rgba(251,191,36,0.6);
-      box-shadow: 0 0 60px rgba(251,191,36,0.25);
+      background: radial-gradient(circle at 40% 40%, rgba(251, 191, 36, 0.3), rgba(124, 58, 237, 0.15));
+      border-color: rgba(251, 191, 36, 0.5);
+      box-shadow: 0 0 60px rgba(251, 191, 36, 0.2);
+      animation: none;
     }
 
     .surprise-message {
-      font-size: 1.1rem;
-      line-height: 1.6;
+      font-size: 1.05rem;
+      line-height: 1.7;
       max-width: 400px;
       min-height: 3rem;
       opacity: 0;
-      transition: opacity 0.5s ease;
+      transition: opacity 0.6s ease;
+      font-weight: 400;
     }
 
     .surprise-message.show { opacity: 1; }
 
-    /* ── SCREEN FINAL: Mision cumplida ── */
+    /* ══════════════════════════════════
+       FINAL SCREEN
+    ══════════════════════════════════ */
     #final-screen {
       text-align: center;
-      gap: 1rem;
+      gap: 1.2rem;
     }
 
     .final-badge {
-      font-size: 4rem;
-      animation: float 3s ease-in-out infinite;
-    }
-
-    #final-screen h2 {
-      font-size: clamp(1.5rem, 5vw, 2.2rem);
-      font-weight: 700;
-      background: linear-gradient(135deg, #a855f7, #f472b6, #fbbf24);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    #final-screen .final-text {
-      font-size: clamp(1rem, 3vw, 1.25rem);
-      line-height: 1.8;
-      max-width: 480px;
-      opacity: 0.9;
-    }
-
-    #final-screen .final-small {
-      font-size: 0.9rem;
-      opacity: 0.55;
-      margin-top: 1rem;
-      font-style: italic;
+      font-size: 4.5rem;
+      animation: orbFloat 4s ease-in-out infinite;
     }
 
     .mission-check {
@@ -467,85 +582,114 @@
       align-items: center;
       gap: 0.5rem;
       padding: 0.6rem 1.5rem;
-      background: rgba(74, 222, 128, 0.15);
-      border: 1px solid rgba(74, 222, 128, 0.3);
+      background: rgba(74, 222, 128, 0.1);
+      border: 1px solid rgba(74, 222, 128, 0.2);
       border-radius: 50px;
-      font-size: 0.95rem;
+      font-size: 0.88rem;
       font-weight: 600;
       color: #86efac;
+      letter-spacing: 0.02em;
     }
 
-    /* ── Progress indicator ── */
-    .progress-bar {
-      position: fixed;
-      top: 0; left: 0;
-      height: 3px;
-      background: linear-gradient(90deg, #a855f7, #f472b6);
-      z-index: 100;
-      transition: width 0.5s ease;
-      border-radius: 0 2px 2px 0;
+    #final-screen h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.6rem, 5vw, 2.4rem);
+      font-weight: 700;
+      background: linear-gradient(135deg, #a78bfa, #f472b6, #fbbf24);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.3;
     }
 
-    /* visited markers */
-    .visit-markers {
-      display: flex;
-      gap: 0.6rem;
-      margin-top: 0.5rem;
+    #final-screen .final-text {
+      font-size: clamp(1rem, 3vw, 1.15rem);
+      line-height: 1.9;
+      max-width: 460px;
+      opacity: 0.8;
+      font-weight: 300;
     }
 
-    .visit-marker {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.2);
-      transition: background 0.4s ease;
+    #final-screen .final-small {
+      font-size: 0.85rem;
+      opacity: 0.4;
+      margin-top: 1.5rem;
+      font-style: italic;
+      font-weight: 300;
     }
-
-    .visit-marker.done { background: #a855f7; }
 
     /* ── Animations ── */
     @keyframes blink {
       50% { opacity: 0; }
     }
 
-    @keyframes float {
+    @keyframes orbFloat {
       0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-12px); }
+      50% { transform: translateY(-15px); }
+    }
+
+    @keyframes orbGlow {
+      0% { box-shadow: 0 0 40px rgba(124, 58, 237, 0.4), 0 0 80px rgba(124, 58, 237, 0.2), inset 0 0 30px rgba(255,255,255,0.1); }
+      100% { box-shadow: 0 0 60px rgba(124, 58, 237, 0.6), 0 0 120px rgba(124, 58, 237, 0.3), inset 0 0 30px rgba(255,255,255,0.15); }
     }
 
     @keyframes fadeUp {
       to { opacity: 1; transform: translateY(0); }
     }
 
-    @keyframes shimmer {
-      0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
-      50% { transform: translate(-30%, -30%) rotate(10deg); }
-    }
-
     @keyframes riseUp {
-      0% { transform: translateY(0) rotate(0deg); opacity: 0.7; }
-      100% { transform: translateY(-110vh) rotate(40deg); opacity: 0; }
+      0% { transform: translateY(0) rotate(0deg); opacity: 0.6; }
+      100% { transform: translateY(-110vh) rotate(30deg); opacity: 0; }
     }
 
-    @keyframes pulse-glow {
-      0%, 100% { box-shadow: 0 0 20px rgba(168,85,247,0.2); }
-      50% { box-shadow: 0 0 40px rgba(168,85,247,0.4); }
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 30px rgba(124, 58, 237, 0.1); }
+      50% { box-shadow: 0 0 50px rgba(124, 58, 237, 0.25); }
     }
 
     @keyframes cardBounce {
       0% { transform: rotateY(180deg) scale(1); }
-      50% { transform: rotateY(180deg) scale(1.15); }
+      50% { transform: rotateY(180deg) scale(1.12); }
       100% { transform: rotateY(180deg) scale(1); }
     }
 
-    /* ── Responsive tweaks ── */
-    @media (max-width: 480px) {
-      .stop-card { padding: 1.5rem 1.2rem; }
-      .btn-surprise { width: 150px; height: 150px; font-size: 0.9rem; }
-      .memory-grid { max-width: 280px; gap: 0.5rem; }
+    @keyframes ambientDrift1 {
+      0%, 100% { transform: translate(0, 0); }
+      33% { transform: translate(80px, 60px); }
+      66% { transform: translate(-40px, 30px); }
     }
+
+    @keyframes ambientDrift2 {
+      0%, 100% { transform: translate(0, 0); }
+      33% { transform: translate(-60px, -80px); }
+      66% { transform: translate(50px, -40px); }
+    }
+
+    @keyframes ambientDrift3 {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(-80px, 50px); }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 480px) {
+      .stop-card { padding: 1.8rem 1.4rem; }
+      .btn-surprise { width: 150px; height: 150px; font-size: 0.85rem; }
+      .memory-grid { max-width: 280px; gap: 0.5rem; }
+      .ambient { opacity: 0.25; }
+    }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(124, 58, 237, 0.3); border-radius: 10px; }
   </style>
 </head>
 <body>
+
+  <!-- Ambient glow -->
+  <div class="ambient ambient-1"></div>
+  <div class="ambient ambient-2"></div>
+  <div class="ambient ambient-3"></div>
 
   <!-- Stars background -->
   <canvas id="stars-canvas"></canvas>
@@ -555,14 +699,17 @@
 
   <!-- ════ SCREEN 1: Intro ════ -->
   <section class="screen visible" id="intro">
-    <div class="sparkle-icon">&#10024;</div>
+    <div class="intro-orb"></div>
     <div id="typing-text" class="cursor-blink"></div>
     <button class="btn-magic" id="btn-enter" onclick="goToMap()">Entrar al viaje</button>
   </section>
 
   <!-- ════ SCREEN 2: Map ════ -->
   <section class="screen hidden" id="map-screen">
-    <h2>Elige una parada del viaje &#128506;</h2>
+    <div class="map-header">
+      <h2>Elige una parada del viaje</h2>
+      <p class="map-subtitle">Visita las tres para desbloquear el final</p>
+    </div>
     <div class="visit-markers" id="visit-markers">
       <div class="visit-marker" data-stop="jardin"></div>
       <div class="visit-marker" data-stop="minigame"></div>
@@ -570,29 +717,29 @@
     </div>
     <div class="stops-grid">
       <div class="stop-card" onclick="goToStop('jardin')">
-        <div class="icon">&#127803;</div>
-        <h3>Jardin de cosas bonitas</h3>
+        <span class="icon">&#127803;</span>
+        <h3>Jard&#237;n de cosas bonitas</h3>
         <p>Mensajes que florecen solo para ti.</p>
       </div>
       <div class="stop-card" onclick="goToStop('minigame')">
-        <div class="icon">&#127922;</div>
+        <span class="icon">&#127922;</span>
         <h3>Mini-juego de memoria</h3>
         <p>Encuentra las parejas y desbloquea un mensaje.</p>
       </div>
       <div class="stop-card" onclick="goToStop('sorpresa')">
-        <div class="icon">&#127873;</div>
-        <h3>Boton sorpresa</h3>
-        <p>Porque los dias grises necesitan magia.</p>
+        <span class="icon">&#127873;</span>
+        <h3>Bot&#243;n sorpresa</h3>
+        <p>Porque los d&#237;as grises necesitan magia.</p>
       </div>
     </div>
     <button class="btn-magic show" id="btn-final" style="display:none;" onclick="goToFinal()">
-      Completar la mision &#10024;
+      Completar la misi&#243;n
     </button>
   </section>
 
   <!-- ════ STOP 1: Jardin ════ -->
   <section class="screen hidden" id="jardin-screen">
-    <h2>&#127803; Jardin de cosas bonitas</h2>
+    <h2>&#127803; Jard&#237;n de cosas bonitas</h2>
     <div class="messages-container" id="jardin-messages"></div>
     <button class="btn-back" onclick="backToMap()">&#8592; Volver al mapa</button>
     <div class="floating-hearts" id="floating-hearts"></div>
@@ -613,11 +760,11 @@
 
   <!-- ════ STOP 3: Sorpresa ════ -->
   <section class="screen hidden" id="sorpresa-screen">
-    <h2>&#9729;&#65039; El boton anti-dias grises</h2>
+    <h2>&#9729;&#65039; El bot&#243;n anti-d&#237;as grises</h2>
     <div class="surprise-btn-wrapper">
       <button class="btn-surprise" id="btn-surprise" onclick="triggerSurprise()">
         <span class="cloud-icon">&#9729;&#65039;</span>
-        <span>Boton anti-dias<br>grises de Paulina</span>
+        <span>Bot&#243;n anti-d&#237;as<br>grises de Paulina</span>
       </button>
       <div class="surprise-message" id="surprise-msg"></div>
     </div>
@@ -627,12 +774,12 @@
   <!-- ════ SCREEN FINAL ════ -->
   <section class="screen hidden" id="final-screen">
     <div class="final-badge">&#11088;</div>
-    <div class="mission-check">&#10004; Mision completada</div>
+    <div class="mission-check">&#10004; Misi&#243;n completada</div>
     <h2>La sonrisa de Paulina fue encontrada</h2>
     <p class="final-text">
       ...y siempre estuvo con ella &#128522;<br><br>
       A veces solo necesitamos que alguien nos recuerde<br>
-      lo increibles que somos.
+      lo incre&#237;bles que somos.
     </p>
     <p class="final-small">Hice esto solo para sacarte una sonrisa.</p>
   </section>
@@ -652,14 +799,17 @@
 
     function createStars() {
       stars = [];
-      const count = Math.floor((canvas.width * canvas.height) / 4000);
+      const count = Math.floor((canvas.width * canvas.height) / 3500);
       for (let i = 0; i < count; i++) {
         stars.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
-          r: Math.random() * 1.5 + 0.3,
+          r: Math.random() * 1.4 + 0.2,
           alpha: Math.random(),
-          da: (Math.random() - 0.5) * 0.015
+          da: (Math.random() - 0.5) * 0.012,
+          color: Math.random() > 0.85
+            ? `hsla(${260 + Math.random() * 40}, 80%, 80%, `
+            : `hsla(240, 20%, 90%, `
         });
       }
     }
@@ -668,10 +818,10 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       for (const s of stars) {
         s.alpha += s.da;
-        if (s.alpha <= 0.1 || s.alpha >= 1) s.da *= -1;
+        if (s.alpha <= 0.05 || s.alpha >= 1) s.da *= -1;
         ctx.beginPath();
         ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(220, 200, 255, ${s.alpha})`;
+        ctx.fillStyle = s.color + s.alpha + ')';
         ctx.fill();
       }
       requestAnimationFrame(drawStars);
@@ -721,7 +871,7 @@
         });
         currentScreen = id;
         updateProgress();
-      }, 400);
+      }, 500);
     }
 
     function goToMap() {
@@ -753,9 +903,7 @@
     function goToFinal() {
       showScreen('final-screen');
       updateProgress();
-      setTimeout(() => {
-        launchFinalCelebration();
-      }, 600);
+      setTimeout(() => launchFinalCelebration(), 600);
     }
 
     function updateProgress() {
@@ -805,7 +953,6 @@
       });
     }
 
-    /* Floating hearts */
     let heartsInterval = null;
 
     function startFloatingHearts() {
@@ -826,8 +973,7 @@
         clearInterval(heartsInterval);
         heartsInterval = null;
       }
-      const container = document.getElementById('floating-hearts');
-      container.innerHTML = '';
+      document.getElementById('floating-hearts').innerHTML = '';
     }
 
     /* ═══════════════════════════════════
@@ -835,7 +981,6 @@
     ═══════════════════════════════════ */
     const memoryEmojis = ['\ud83e\udd8b', '\ud83c\udf1f', '\ud83c\udf3b', '\ud83d\udc9c', '\ud83c\udf1e', '\ud83c\udf38',
                           '\ud83e\udd8b', '\ud83c\udf1f', '\ud83c\udf3b', '\ud83d\udc9c', '\ud83c\udf1e', '\ud83c\udf38'];
-    // Butterfly, Star, Sunflower, Purple heart, Sun, Cherry blossom (6 pairs)
 
     let memoryCards = [];
     let flippedCards = [];
@@ -845,9 +990,9 @@
     let memoryInitialized = false;
 
     const winMessages = [
-      '\u00a1Increible, Paulina! Tu memoria es tan brillante como tu sonrisa \u2728',
+      '\u00a1Incre\u00edble, Paulina! Tu memoria es tan brillante como tu sonrisa \u2728',
       '\u00a1Lo lograste! Eres una campeona de las parejas \ud83c\udfc6',
-      'Sabia que lo ibas a lograr. Eres imparable \ud83d\udcab'
+      'Sab\u00eda que lo ibas a lograr. Eres imparable \ud83d\udcab'
     ];
 
     function shuffle(array) {
@@ -913,7 +1058,6 @@
       const [card1, card2] = flippedCards;
 
       if (card1.dataset.emoji === card2.dataset.emoji) {
-        // Match!
         card1.classList.add('matched');
         card2.classList.add('matched');
         card1.style.animation = 'cardBounce 0.4s ease';
@@ -926,7 +1070,7 @@
           particleCount: 20,
           spread: 50,
           origin: { y: 0.7 },
-          colors: ['#a855f7', '#f472b6', '#fbbf24'],
+          colors: ['#7c3aed', '#f472b6', '#fbbf24'],
           ticks: 40,
           gravity: 0.8
         });
@@ -934,11 +1078,8 @@
         flippedCards = [];
         lockBoard = false;
 
-        if (matchedPairs === 6) {
-          setTimeout(onGameWin, 500);
-        }
+        if (matchedPairs === 6) setTimeout(onGameWin, 500);
       } else {
-        // No match
         setTimeout(() => {
           card1.classList.remove('flipped');
           card2.classList.remove('flipped');
@@ -956,10 +1097,9 @@
       msgEl.classList.add('show');
       restartBtn.style.display = 'inline-block';
 
-      // Big celebration
       const duration = 2000;
       const end = Date.now() + duration;
-      const colors = ['#a855f7', '#f472b6', '#fbbf24', '#38bdf8', '#4ade80'];
+      const colors = ['#7c3aed', '#f472b6', '#fbbf24', '#38bdf8', '#4ade80'];
 
       (function frame() {
         confetti({ particleCount: 4, angle: 60, spread: 55, origin: { x: 0 }, colors });
@@ -992,7 +1132,7 @@
         particleCount: 50,
         spread: 80,
         origin: { y: 0.6 },
-        colors: ['#a855f7', '#fbbf24', '#f472b6', '#38bdf8'],
+        colors: ['#7c3aed', '#fbbf24', '#f472b6', '#38bdf8'],
         ticks: 60,
         gravity: 0.6
       });
@@ -1013,7 +1153,7 @@
     function launchFinalCelebration() {
       const duration = 3000;
       const end = Date.now() + duration;
-      const colors = ['#a855f7', '#f472b6', '#fbbf24', '#38bdf8', '#4ade80'];
+      const colors = ['#7c3aed', '#f472b6', '#fbbf24', '#38bdf8', '#4ade80'];
 
       (function frame() {
         confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 }, colors });
