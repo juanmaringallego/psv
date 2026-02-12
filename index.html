@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Una misión especial para Paulina</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+</head>
+<body>
+
+  <!-- ===== PANTALLA DE INICIO ===== -->
+  <section id="intro" class="screen active">
+    <div id="stars-container"></div>
+    <div class="intro-content">
+      <div class="sparkle-icon">&#10024;</div>
+      <p id="typewriter" class="typewriter-text"></p>
+      <button id="btn-enter" class="btn-magic hidden" onclick="startJourney()">Entrar al viaje</button>
+    </div>
+  </section>
+
+  <!-- ===== MAPA DE PARADAS ===== -->
+  <section id="map" class="screen">
+    <h2 class="section-title fade-in">Elige una parada del viaje</h2>
+    <p class="section-subtitle fade-in">Explora cada lugar cuando quieras</p>
+    <div class="stops-grid fade-in">
+      <div class="stop-card" onclick="openStop('garden')">
+        <span class="stop-emoji">&#127803;</span>
+        <h3>Jardin de cosas bonitas</h3>
+        <p>Mensajes que florecen</p>
+      </div>
+      <div class="stop-card" onclick="openStop('memories')">
+        <span class="stop-emoji">&#128248;</span>
+        <h3>Sala de recuerdos felices</h3>
+        <p>Motivos para sonreir</p>
+      </div>
+      <div class="stop-card" onclick="openStop('surprise')">
+        <span class="stop-emoji">&#9729;&#65039;</span>
+        <h3>Boton sorpresa</h3>
+        <p>Anti-dias grises</p>
+      </div>
+    </div>
+    <div id="visit-tracker" class="visit-tracker fade-in">
+      <span id="tracker-1" class="tracker-dot"></span>
+      <span id="tracker-2" class="tracker-dot"></span>
+      <span id="tracker-3" class="tracker-dot"></span>
+    </div>
+  </section>
+
+  <!-- ===== JARDIN DE COSAS BONITAS ===== -->
+  <section id="garden" class="screen">
+    <button class="btn-back" onclick="goBack()">&#8592; Volver al mapa</button>
+    <h2 class="section-title fade-in">&#127803; Jardin de cosas bonitas</h2>
+    <div class="garden-cards fade-in">
+      <div class="message-card">
+        <span class="card-deco">&#10024;</span>
+        <p>Tu sonrisa tiene poderes secretos &#10024;</p>
+      </div>
+      <div class="message-card">
+        <span class="card-deco">&#127804;</span>
+        <p>Hablar contigo alegra cualquier dia.</p>
+      </div>
+      <div class="message-card">
+        <span class="card-deco">&#11088;</span>
+        <p>Eres mas especial de lo que imaginas.</p>
+      </div>
+      <div class="message-card">
+        <span class="card-deco">&#128156;</span>
+        <p>El mundo es un poquito mejor porque tu estas en el.</p>
+      </div>
+      <div class="message-card">
+        <span class="card-deco">&#127808;</span>
+        <p>Mereces todos los dias bonitos que existen.</p>
+      </div>
+      <div class="message-card">
+        <span class="card-deco">&#9728;&#65039;</span>
+        <p>Donde sea que vayas, llevas luz contigo.</p>
+      </div>
+    </div>
+    <div id="floating-hearts"></div>
+  </section>
+
+  <!-- ===== SALA DE RECUERDOS FELICES ===== -->
+  <section id="memories" class="screen">
+    <button class="btn-back" onclick="goBack()">&#8592; Volver al mapa</button>
+    <h2 class="section-title fade-in">&#128248; Sala de recuerdos felices</h2>
+    <div class="memories-grid fade-in">
+      <div class="memory-item">
+        <div class="memory-emoji">&#127770;</div>
+        <p>Las noches tranquilas existen gracias a personas como tu</p>
+      </div>
+      <div class="memory-item">
+        <div class="memory-emoji">&#127846;</div>
+        <p>La vida es como un helado: mejor cuando se comparte</p>
+      </div>
+      <div class="memory-item">
+        <div class="memory-emoji">&#128049;</div>
+        <p>Fun fact: los gatos ronronean a una frecuencia que sana. Tu risa hace lo mismo</p>
+      </div>
+      <div class="memory-item">
+        <div class="memory-emoji">&#127752;</div>
+        <p>Despues de la lluvia siempre sale algo bonito</p>
+      </div>
+    </div>
+    <div class="smile-btn-container fade-in">
+      <button class="btn-smile" onclick="launchConfetti()">
+        &#128155; Presiona aqui si necesitas sonreir
+      </button>
+    </div>
+  </section>
+
+  <!-- ===== BOTON SORPRESA ===== -->
+  <section id="surprise" class="screen">
+    <button class="btn-back" onclick="goBack()">&#8592; Volver al mapa</button>
+    <h2 class="section-title fade-in">&#9729;&#65039; Boton anti-dias grises de Paulina</h2>
+    <div class="surprise-container fade-in">
+      <p class="surprise-desc">Cuando un dia se ponga gris, solo presiona...</p>
+      <button class="btn-surprise" id="btn-surprise" onclick="triggerSurprise()">
+        <span class="btn-surprise-text">&#9889; Presioname &#9889;</span>
+      </button>
+      <div id="surprise-message" class="surprise-message hidden"></div>
+    </div>
+  </section>
+
+  <!-- ===== PANTALLA FINAL ===== -->
+  <section id="finale" class="screen">
+    <div id="finale-stars"></div>
+    <div class="finale-content">
+      <div class="finale-check">&#10004;</div>
+      <h2 class="finale-title">Mision completada</h2>
+      <p class="finale-text">
+        La sonrisa de Paulina fue encontrada...<br>
+        y siempre estuvo con ella &#128522;
+      </p>
+      <p class="finale-note">Hice esto solo para sacarte una sonrisa.</p>
+      <button class="btn-magic" onclick="restartJourney()">Volver a empezar &#10024;</button>
+    </div>
+  </section>
+
+  <script src="script.js"></script>
+</body>
+</html>
