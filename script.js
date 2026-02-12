@@ -5,19 +5,18 @@ const output = document.getElementById('output');
 // Lines to display with delays
 const bootSequence = [
   { delay: 300, html: '<span class="cmd-text">$ whoami</span>' },
-  { delay: 600, html: '<span class="ascii">   _                       _            _     </span>' },
-  { delay: 80,  html: '<span class="ascii">  (_) ___ _ __ ___   __ _| |_ ___  ___| |__  </span>' },
-  { delay: 80,  html: '<span class="ascii">  | |/ _ \\ \'_ ` _ \\ / _` | __/ _ \\/ __| \'_ \\ </span>' },
-  { delay: 80,  html: '<span class="ascii">  | |  __/ | | | | | (_| | ||  __/ (__| | | |</span>' },
-  { delay: 80,  html: '<span class="ascii">  | |\\___|_| |_| |_|\\__, |\\__\\___|\\___|_| |_|</span>' },
-  { delay: 80,  html: '<span class="ascii"> |__/               |___/                     </span>' },
+  { delay: 600, html: '<span class="ascii">    _                      </span>' },
+  { delay: 80,  html: '<span class="ascii">   (_) ___ _ __ ___   __ _ </span>' },
+  { delay: 80,  html: '<span class="ascii">   | |/ _ \\ \'_ ` _ \\ / _` |</span>' },
+  { delay: 80,  html: '<span class="ascii">   | |  __/ | | | | | (_| |</span>' },
+  { delay: 80,  html: '<span class="ascii">  _/ |\\___|_| |_| |_|\\__, |</span>' },
+  { delay: 80,  html: '<span class="ascii"> |__/                |___/ </span>' },
   { delay: 500, html: '' },
   { delay: 100, html: '<span class="comment">// Servidor personal de desarrollo</span>' },
-  { delay: 100, html: '<span class="comment">// Donde las ideas se convierten en codigo</span>' },
   { delay: 400, html: '' },
   { delay: 100, html: '<span class="cmd-text">$ cat about.json</span>' },
   { delay: 300, html: '{' },
-  { delay: 80,  html: '  <span class="keyword">"nombre"</span>: <span class="string">"Juan Manuel Ringa Llego"</span>,' },
+  { delay: 80,  html: '  <span class="keyword">"nombre"</span>: <span class="string">"Juan Esteban Marin Gallego"</span>,' },
   { delay: 80,  html: '  <span class="keyword">"rol"</span>: <span class="string">"Desarrollador"</span>,' },
   { delay: 80,  html: '  <span class="keyword">"server"</span>: <span class="string">"jemg.tech"</span>,' },
   { delay: 80,  html: '  <span class="keyword">"status"</span>: <span class="success">"online"</span>,' },
@@ -43,16 +42,16 @@ const projects = [
 
 // Fortune messages (random dev humor)
 const fortunes = [
-  '"El codigo funciona en mi maquina" - Todos, siempre.',
-  '"Hay dos cosas dificiles en programacion: nombrar variables, invalidar cache, y errores off-by-one."',
+  '"El codigo funciona en mi maquina." - Todos, siempre.',
   '"No es un bug, es una feature no documentada."',
-  '"git commit -m \\"arreglo final final v2 ahora si\\"" - Un clasico.',
-  '"El mejor codigo es el que no tienes que escribir."',
+  '"git commit -m \\"arreglo final final v2 ahora si\\""',
   '"Funciona. No lo toques."',
   '"99 bugs en el codigo, arreglas uno... 127 bugs en el codigo."',
-  '"Programar es como escribir un libro... donde si olvidas un punto y coma, nada tiene sentido."',
-  '"La documentacion es como el gimnasio: todos saben que deberian ir, casi nadie va."',
-  '"Si depurar es quitar bugs, programar es ponerlos." - Dijkstra (probablemente)',
+  '"La documentacion es como el gimnasio: todos saben que deberian ir."',
+  '"Hoy no hay frase. Solo cafe y codigo."',
+  '"ctrl+z es mi segundo mejor amigo. El primero es stackoverflow."',
+  '"Deberia estar durmiendo, pero aqui estoy."',
+  '"Todo empezo con un Hello World."',
 ];
 
 // Helpers
