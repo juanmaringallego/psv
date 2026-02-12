@@ -39,11 +39,18 @@
         <h3>Boton sorpresa</h3>
         <p>Anti-dias grises</p>
       </div>
+      <div class="stop-card stop-card-daily" onclick="openStop('daily')">
+        <span class="stop-emoji">&#128229;</span>
+        <span class="daily-badge">NUEVO</span>
+        <h3>Sorpresa del dia</h3>
+        <p>Algo nuevo cada dia</p>
+      </div>
     </div>
     <div id="visit-tracker" class="visit-tracker fade-in">
       <span id="tracker-1" class="tracker-dot"></span>
       <span id="tracker-2" class="tracker-dot"></span>
       <span id="tracker-3" class="tracker-dot"></span>
+      <span id="tracker-4" class="tracker-dot"></span>
     </div>
   </section>
 
@@ -119,6 +126,24 @@
         <span class="btn-surprise-text">&#9889; Presioname &#9889;</span>
       </button>
       <div id="surprise-message" class="surprise-message hidden"></div>
+    </div>
+  </section>
+
+  <!-- ===== SORPRESA DEL DIA ===== -->
+  <section id="daily" class="screen">
+    <button class="btn-back" onclick="goBack()">&#8592; Volver al mapa</button>
+    <div class="daily-container fade-in">
+      <div id="daily-category-badge" class="daily-category-badge"></div>
+      <h2 id="daily-title" class="section-title"></h2>
+      <div id="daily-card" class="daily-card">
+        <div id="daily-icon" class="daily-icon"></div>
+        <p id="daily-text" class="daily-text"></p>
+      </div>
+      <div id="daily-extra" class="daily-extra"></div>
+      <p class="daily-footer">Vuelve manana, habra algo nuevo esperandote &#10024;</p>
+      <div class="daily-streak">
+        <span id="daily-streak-text"></span>
+      </div>
     </div>
   </section>
 
