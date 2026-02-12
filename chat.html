@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chats de Paulina</title>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap');
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Quicksand', sans-serif;
+      background: #111b21;
+      color: #e9edef;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Screens ── */
+    .screen {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+
+    .screen.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .screen.hidden { display: none; }
+
+    /* ── Contact List Screen ── */
+    .wa-header {
+      background: #1f2c34;
+      padding: 1rem 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .wa-header h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #e9edef;
+    }
+
+    .wa-header .subtitle {
+      font-size: 0.75rem;
+      color: #8696a0;
+      font-weight: 400;
+    }
+
+    .contact-list {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.9rem 1.2rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      border-bottom: 1px solid rgba(134, 150, 160, 0.1);
+    }
+
+    .contact-item:hover { background: rgba(255, 255, 255, 0.05); }
+
+    .contact-item.completed {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .contact-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      flex-shrink: 0;
+    }
+
+    .contact-info { flex: 1; min-width: 0; }
+
+    .contact-name {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 0.15rem;
+    }
+
+    .contact-preview {
+      font-size: 0.85rem;
+      color: #8696a0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .contact-badge {
+      background: #00a884;
+      color: #111b21;
+      font-size: 0.7rem;
+      font-weight: 700;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .contact-check {
+      color: #00a884;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    /* ── Chat Screen ── */
+    .chat-header {
+      background: #1f2c34;
+      padding: 0.7rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .chat-back {
+      background: none;
+      border: none;
+      color: #00a884;
+      font-size: 1.4rem;
+      cursor: pointer;
+      padding: 0.3rem;
+      display: flex;
+      align-items: center;
+    }
+
+    .chat-header-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+
+    .chat-header-info { flex: 1; }
+    .chat-header-name { font-size: 1rem; font-weight: 600; }
+
+    .chat-header-status {
+      font-size: 0.75rem;
+      color: #8696a0;
+    }
+
+    .chat-header-status.online { color: #00a884; }
+
+    /* ── Chat messages area ── */
+    .chat-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem 0.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      background: #0b141a;
+      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5 L35 15 L30 12 L25 15Z' fill='rgba(255,255,255,0.02)'/%3E%3C/svg%3E");
+    }
+
+    .bubble {
+      max-width: 80%;
+      padding: 0.5rem 0.7rem;
+      border-radius: 8px;
+      font-size: 0.92rem;
+      line-height: 1.45;
+      position: relative;
+      word-wrap: break-word;
+      opacity: 0;
+      transform: translateY(8px);
+      animation: bubbleIn 0.3s ease forwards;
+    }
+
+    .bubble-in {
+      background: #202c33;
+      color: #e9edef;
+      align-self: flex-start;
+      border-top-left-radius: 0;
+    }
+
+    .bubble-out {
+      background: #005c4b;
+      color: #e9edef;
+      align-self: flex-end;
+      border-top-right-radius: 0;
+    }
+
+    .bubble .time {
+      font-size: 0.65rem;
+      color: rgba(255, 255, 255, 0.45);
+      float: right;
+      margin-left: 0.6rem;
+      margin-top: 0.3rem;
+    }
+
+    .bubble-out .time::after {
+      content: ' \u2713\u2713';
+      color: #53bdeb;
+    }
+
+    /* Typing indicator */
+    .typing-indicator {
+      align-self: flex-start;
+      background: #202c33;
+      border-radius: 8px;
+      border-top-left-radius: 0;
+      padding: 0.6rem 1rem;
+      display: flex;
+      gap: 0.25rem;
+      opacity: 0;
+      animation: bubbleIn 0.3s ease forwards;
+    }
+
+    .typing-indicator span {
+      width: 7px;
+      height: 7px;
+      background: #8696a0;
+      border-radius: 50%;
+      animation: typingDot 1.4s infinite;
+    }
+
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+    /* ── Response options ── */
+    .response-options {
+      padding: 0.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      background: #1f2c34;
+      border-top: 1px solid rgba(134, 150, 160, 0.15);
+    }
+
+    .response-options p {
+      font-size: 0.8rem;
+      color: #8696a0;
+      text-align: center;
+      margin-bottom: 0.2rem;
+    }
+
+    .response-btn {
+      padding: 0.65rem 1rem;
+      border: 1px solid rgba(0, 168, 132, 0.4);
+      border-radius: 20px;
+      background: rgba(0, 168, 132, 0.08);
+      color: #00a884;
+      font-family: 'Quicksand', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+      text-align: left;
+    }
+
+    .response-btn:hover {
+      background: rgba(0, 168, 132, 0.18);
+      transform: scale(1.02);
+    }
+
+    .response-btn:active { transform: scale(0.98); }
+
+    /* ── Final Screen ── */
+    #final-screen {
+      background: #0b0b2b;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem 1.5rem;
+      gap: 1.2rem;
+    }
+
+    .final-emoji {
+      font-size: 4rem;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    #final-screen h2 {
+      font-size: clamp(1.5rem, 5vw, 2rem);
+      font-weight: 700;
+      background: linear-gradient(135deg, #00a884, #53bdeb, #00a884);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    #final-screen .final-name {
+      font-size: clamp(1.8rem, 6vw, 2.5rem);
+      font-weight: 700;
+      color: #fff;
+      margin: 0.5rem 0;
+    }
+
+    #final-screen .final-text {
+      font-size: clamp(1rem, 3vw, 1.15rem);
+      line-height: 1.8;
+      max-width: 450px;
+      color: #e9edef;
+      opacity: 0.9;
+    }
+
+    #final-screen .final-small {
+      font-size: 0.85rem;
+      color: #8696a0;
+      font-style: italic;
+      margin-top: 1rem;
+    }
+
+    .final-hearts {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .final-hearts span {
+      position: absolute;
+      bottom: -40px;
+      font-size: 1.2rem;
+      animation: riseUp linear infinite;
+      opacity: 0.5;
+    }
+
+    /* ── Progress bar ── */
+    .progress-bar {
+      position: fixed;
+      top: 0; left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #00a884, #53bdeb);
+      z-index: 100;
+      transition: width 0.5s ease;
+      border-radius: 0 2px 2px 0;
+    }
+
+    /* ── Animations ── */
+    @keyframes bubbleIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes typingDot {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+      30% { transform: translateY(-5px); opacity: 1; }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
+    }
+
+    @keyframes riseUp {
+      0% { transform: translateY(0) rotate(0deg); opacity: 0.6; }
+      100% { transform: translateY(-110vh) rotate(30deg); opacity: 0; }
+    }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(134, 150, 160, 0.3); border-radius: 10px; }
+
+    @media (max-width: 480px) {
+      .bubble { max-width: 88%; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
+
+  <!-- ════ CONTACT LIST ════ -->
+  <section class="screen visible" id="contact-screen">
+    <div class="wa-header">
+      <div>
+        <h1>WhatsApp</h1>
+        <span class="subtitle">4 chats nuevos</span>
+      </div>
+    </div>
+    <div class="contact-list" id="contact-list">
+      <div class="contact-item" data-chat="gato" onclick="openChat('gato')">
+        <div class="contact-avatar" style="background:#2d1f3d;">&#128049;</div>
+        <div class="contact-info">
+          <div class="contact-name">Gato con WiFi</div>
+          <div class="contact-preview">necesitamos hablar...</div>
+        </div>
+        <div class="contact-badge" id="badge-gato">1</div>
+      </div>
+      <div class="contact-item" data-chat="alien" onclick="openChat('alien')">
+        <div class="contact-avatar" style="background:#1f2d3d;">&#128125;</div>
+        <div class="contact-info">
+          <div class="contact-name">Alien reci&#233;n llegado</div>
+          <div class="contact-preview">hola?? esto es la tierra??</div>
+        </div>
+        <div class="contact-badge" id="badge-alien">1</div>
+      </div>
+      <div class="contact-item" data-chat="fantasma" onclick="openChat('fantasma')">
+        <div class="contact-avatar" style="background:#1f3d2d;">&#128123;</div>
+        <div class="contact-info">
+          <div class="contact-name">Fantasma del depto</div>
+          <div class="contact-preview">oye, tenemos que poner reglas</div>
+        </div>
+        <div class="contact-badge" id="badge-fantasma">1</div>
+      </div>
+      <div class="contact-item" data-chat="futuro" onclick="openChat('futuro')">
+        <div class="contact-avatar" style="background:#3d2d1f;">&#128302;</div>
+        <div class="contact-info">
+          <div class="contact-name">Paulina del futuro</div>
+          <div class="contact-preview">necesito decirte algo importante</div>
+        </div>
+        <div class="contact-badge" id="badge-futuro">1</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ CHAT SCREEN ════ -->
+  <section class="screen hidden" id="chat-screen">
+    <div class="chat-header">
+      <button class="chat-back" onclick="backToContacts()">&#8592;</button>
+      <div class="chat-header-avatar" id="chat-avatar"></div>
+      <div class="chat-header-info">
+        <div class="chat-header-name" id="chat-name"></div>
+        <div class="chat-header-status" id="chat-status">en l&#237;nea</div>
+      </div>
+    </div>
+    <div class="chat-body" id="chat-body"></div>
+    <div class="response-options hidden" id="response-options"></div>
+  </section>
+
+  <!-- ════ FINAL SCREEN ════ -->
+  <section class="screen hidden" id="final-screen">
+    <div class="final-emoji">&#128154;</div>
+    <h2>Todos tus chats tienen algo en com&#250;n</h2>
+    <div class="final-name">Paulina Giraldo Correa</div>
+    <p class="final-text">
+      Un gato, un alien, un fantasma y tu yo del futuro<br>
+      coinciden en lo mismo:<br><br>
+      Sos de esas personas que hacen que todo<br>
+      sea un poco m&#225;s divertido, m&#225;s c&#225;lido<br>
+      y m&#225;s bonito solo por estar.<br><br>
+      No necesit&#225;s hacer nada especial.<br>
+      Solo siendo vos ya es suficiente. &#128156;
+    </p>
+    <p class="final-small">De parte de alguien que valora mucho tu amistad.</p>
+    <div class="final-hearts" id="final-hearts"></div>
+  </section>
+
+  <script>
+    /* ═══════════════════════════════════
+       CHAT DATA
+    ═══════════════════════════════════ */
+    const chats = {
+      gato: {
+        name: 'Gato con WiFi',
+        emoji: '&#128049;',
+        avatarBg: '#2d1f3d',
+        messages: [
+          { type: 'in', text: 'hola humana' },
+          { type: 'in', text: 'soy tu gato' },
+          { type: 'in', text: 'aprendí a escribir' },
+          { type: 'in', text: 'necesitamos hablar de algo serio' },
+          {
+            type: 'choice',
+            options: [
+              { text: 'Omg un gato que escribe??', next: 'gato_a' },
+              { text: 'Dale, qué pasó?', next: 'gato_b' }
+            ]
+          }
+        ],
+        branches: {
+          gato_a: [
+            { type: 'in', text: 'sí bueno no te emociones tanto' },
+            { type: 'in', text: 'el tema es otro' },
+            { type: 'in', text: 'sé que me sacás fotos cuando duermo' },
+            { type: 'in', text: 'MUCHAS fotos' },
+            {
+              type: 'choice',
+              options: [
+                { text: 'Es que sos muy fotogénico', next: 'gato_c' },
+                { text: 'No sé de qué hablás...', next: 'gato_d' }
+              ]
+            }
+          ],
+          gato_b: [
+            { type: 'in', text: 'ok directo al grano' },
+            { type: 'in', text: 'sé que me sacás fotos cuando duermo' },
+            { type: 'in', text: 'las he visto en tu galería' },
+            { type: 'in', text: 'son como 847' },
+            {
+              type: 'choice',
+              options: [
+                { text: 'Es que sos muy fotogénico', next: 'gato_c' },
+                { text: 'No sé de qué hablás...', next: 'gato_d' }
+              ]
+            }
+          ],
+          gato_c: [
+            { type: 'in', text: 'bueno eso es verdad' },
+            { type: 'in', text: 'pero hay algo más' },
+            { type: 'in', text: 'también sé que me hablás con voz de bebé' },
+            { type: 'in', text: '"quién es el gatito más lindo del mundooo"' },
+            { type: 'in', text: '...' },
+            { type: 'in', text: 'no pares, me gusta 😺' },
+            { type: 'in', text: 'sos la mejor humana que me pudo tocar' },
+            { type: 'in', text: 'y no lo digo solo porque me das comida' },
+            { type: 'in', text: 'bueno un poco sí' },
+            { type: 'in', text: 'pero también porque sos genial ❤️' },
+            { type: 'end' }
+          ],
+          gato_d: [
+            { type: 'in', text: 'tengo evidencia' },
+            { type: 'in', text: 'revisé tu galería a las 3am' },
+            { type: 'in', text: 'como sea, no me quejo' },
+            { type: 'in', text: 'también sé que me hablás con voz de bebé' },
+            { type: 'in', text: 'y que me cantás canciones inventadas' },
+            { type: 'in', text: 'tipo "gatito lindo, gatito bonito"' },
+            { type: 'in', text: '...me encanta, seguí así' },
+            { type: 'in', text: 'sos la humana más crack del mundo 😺' },
+            { type: 'in', text: 'pd: dejá comida extra hoy porfa' },
+            { type: 'end' }
+          ]
+        }
+      },
+      alien: {
+        name: 'Alien recién llegado',
+        emoji: '&#128125;',
+        avatarBg: '#1f2d3d',
+        messages: [
+          { type: 'in', text: 'HOLA???' },
+          { type: 'in', text: 'ESTO ES LA TIERRA???' },
+          { type: 'in', text: 'acabo de aterrizar y esto es muy confuso' },
+          { type: 'in', text: 'me dieron este número y me dijeron que contactara a "Paulina"' },
+          { type: 'in', text: 'que ella me iba a explicar todo' },
+          {
+            type: 'choice',
+            options: [
+              { text: 'Sí, bienvenido! En qué te ayudo?', next: 'alien_a' },
+              { text: 'Quién te dio mi número??', next: 'alien_b' }
+            ]
+          }
+        ],
+        branches: {
+          alien_a: [
+            { type: 'in', text: 'GENIAL' },
+            { type: 'in', text: 'primero: qué es "wifi"??' },
+            { type: 'in', text: 'todos los humanos me preguntan si tengo' },
+            { type: 'in', text: 'es algún tipo de poder especial??' },
+            {
+              type: 'choice',
+              options: [
+                { text: 'Es como oxígeno pero digital', next: 'alien_c' },
+                { text: 'Es la cosa más importante del planeta', next: 'alien_c' }
+              ]
+            }
+          ],
+          alien_b: [
+            { type: 'in', text: 'no puedo revelarlo' },
+            { type: 'in', text: 'solo me dijeron "buscá a Paulina, ella es la mejor"' },
+            { type: 'in', text: 'y aquí estoy' },
+            { type: 'in', text: 'ahora ayudame porfa' },
+            { type: 'in', text: 'qué es "wifi"??? todos preguntan si tengo' },
+            {
+              type: 'choice',
+              options: [
+                { text: 'Es como oxígeno pero digital', next: 'alien_c' },
+                { text: 'Es la cosa más importante del planeta', next: 'alien_c' }
+              ]
+            }
+          ],
+          alien_c: [
+            { type: 'in', text: 'increíble' },
+            { type: 'in', text: 'ok otra pregunta' },
+            { type: 'in', text: 'por qué los humanos miran una pantalla brillante todo el día??' },
+            { type: 'in', text: 'y se ríen solos???' },
+            { type: 'in', text: 'y luego le muestran la pantalla a otros humanos y se ríen juntos???' },
+            {
+              type: 'choice',
+              options: [
+                { text: 'Se llaman memes, son arte', next: 'alien_d' },
+                { text: 'Es una enfermedad colectiva jaja', next: 'alien_d' }
+              ]
+            }
+          ],
+          alien_d: [
+            { type: 'in', text: 'fascinante' },
+            { type: 'in', text: 'los humanos son raros pero divertidos' },
+            { type: 'in', text: 'oye Paulina' },
+            { type: 'in', text: 'tenían razón sobre vos' },
+            { type: 'in', text: 'sos muy buena onda' },
+            { type: 'in', text: 'si todos los humanos fueran como vos, la Tierra sería el mejor planeta de la galaxia' },
+            { type: 'in', text: 'bueno ya es bastante cool por los memes' },
+            { type: 'in', text: 'pero vos lo hacés mejor 👽💚' },
+            { type: 'end' }
+          ]
+        }
+      },
+      fantasma: {
+        name: 'Fantasma del depto',
+        emoji: '&#128123;',
+        avatarBg: '#1f3d2d',
+        messages: [
+          { type: 'in', text: 'buenas' },
+          { type: 'in', text: 'soy el fantasma que vive en tu depto' },
+          { type: 'in', text: 'llevamos viviendo juntos un tiempo ya' },
+          { type: 'in', text: 'y creo que tenemos que poner algunas reglas' },
+          {
+            type: 'choice',
+            options: [
+              { text: 'TENGO UN FANTASMA EN MI CASA??', next: 'fantasma_a' },
+              { text: 'Dale, qué reglas?', next: 'fantasma_b' }
+            ]
+          }
+        ],
+        branches: {
+          fantasma_a: [
+            { type: 'in', text: 'tranquila tranquila' },
+            { type: 'in', text: 'llevo aquí como 80 años' },
+            { type: 'in', text: 'soy inofensivo' },
+            { type: 'in', text: 'de hecho sos la mejor roommate que he tenido' },
+            { type: 'in', text: 'la señora de antes me tiraba cosas' },
+            { type: 'in', text: 'en fin, las reglas:' },
+            {
+              type: 'choice',
+              options: [
+                { text: 'Ok... dale, qué reglas?', next: 'fantasma_c' },
+                { text: 'Esto es mucho para procesar', next: 'fantasma_c' }
+              ]
+            }
+          ],
+          fantasma_b: [
+            { type: 'in', text: 'me gusta tu actitud' },
+            { type: 'in', text: 'nada de gritos, directo al tema' },
+            { type: 'in', text: 'por eso sos mi roommate favorita' },
+            {
+              type: 'choice',
+              options: [
+                { text: 'Gracias?? Jaja cuáles reglas?', next: 'fantasma_c' },
+                { text: 'Un fantasma me dice roommate favorita, ok', next: 'fantasma_c' }
+              ]
+            }
+          ],
+          fantasma_c: [
+            { type: 'in', text: 'regla 1: no cantes en la ducha a las 7am' },
+            { type: 'in', text: 'mentira, cantá lo que quieras, me divierte' },
+            { type: 'in', text: 'regla 2: si se apaga la luz sola, fui yo, perdón' },
+            { type: 'in', text: 'a veces me tropiezo con los cables' },
+            { type: 'in', text: 'regla 3: si encontrás cosas en lugares raros' },
+            { type: 'in', text: 'es que las muevo sin querer de noche' },
+            { type: 'in', text: 'mis manos atraviesan todo menos las llaves por alguna razón' },
+            {
+              type: 'choice',
+              options: [
+                { text: 'Así que VOS movés mis cosas!!', next: 'fantasma_d' },
+                { text: 'Las llaves??? Eso explica mucho', next: 'fantasma_d' }
+              ]
+            }
+          ],
+          fantasma_d: [
+            { type: 'in', text: 'sí perdón por eso 😅' },
+            { type: 'in', text: 'pero oye' },
+            { type: 'in', text: 'última regla y la más importante' },
+            { type: 'in', text: 'regla 4: nunca dejes de ser como sos' },
+            { type: 'in', text: 'llevo 80 años aquí y nunca había tenido una compañera tan buena onda' },
+            { type: 'in', text: 'hacés que hasta un fantasma se sienta acompañado' },
+            { type: 'in', text: 'y eso es decir mucho porque llevo literal 80 años solo' },
+            { type: 'in', text: 'sos genial Paulina 👻💜' },
+            { type: 'end' }
+          ]
+        }
+      },
+      futuro: {
+        name: 'Paulina del futuro',
+        emoji: '&#128302;',
+        avatarBg: '#3d2d1f',
+        messages: [
+          { type: 'in', text: 'Hola Paulina' },
+          { type: 'in', text: 'soy vos' },
+          { type: 'in', text: 'bueno, vos del futuro' },
+          { type: 'in', text: 'sé que suena loco pero necesito decirte algo' },
+          {
+            type: 'choice',
+            options: [
+              { text: 'Qué?? Cómo que del futuro??', next: 'futuro_a' },
+              { text: 'A ver, probalo. Qué sé solo yo?', next: 'futuro_b' }
+            ]
+          }
+        ],
+        branches: {
+          futuro_a: [
+            { type: 'in', text: 'sí del futuro' },
+            { type: 'in', text: 'no te puedo decir mucho porque se rompe el espacio-tiempo o algo así' },
+            { type: 'in', text: 'pero te escribo porque hay algo que tenés que saber' },
+            {
+              type: 'choice',
+              options: [
+                { text: 'Ok estoy nerviosa, qué pasa?', next: 'futuro_c' },
+                { text: 'Es algo malo?', next: 'futuro_c' }
+              ]
+            }
+          ],
+          futuro_b: [
+            { type: 'in', text: 'sé que a veces te quedás despierta pensando de más' },
+            { type: 'in', text: 'sé que a veces dudás de vos misma' },
+            { type: 'in', text: 'y sé que tenés una playlist secreta para cuando estás triste' },
+            { type: 'in', text: 'te lo digo porque soy VOS' },
+            {
+              type: 'choice',
+              options: [
+                { text: 'Ok te creo... qué necesitás decirme?', next: 'futuro_c' },
+                { text: 'Wow ok, soy yo. Qué pasa?', next: 'futuro_c' }
+              ]
+            }
+          ],
+          futuro_c: [
+            { type: 'in', text: 'tranquila, no es nada malo' },
+            { type: 'in', text: 'de hecho es todo lo contrario' },
+            { type: 'in', text: 'te escribo para decirte que todo va a estar bien' },
+            { type: 'in', text: 'esos días difíciles que a veces tenés?' },
+            { type: 'in', text: 'pasan' },
+            { type: 'in', text: 'y las cosas que te preocupan ahora?' },
+            { type: 'in', text: 'la mayoría no eran para tanto' },
+            {
+              type: 'choice',
+              options: [
+                { text: 'En serio? Todo sale bien?', next: 'futuro_d' },
+                { text: 'Necesitaba escuchar eso', next: 'futuro_d' }
+              ]
+            }
+          ],
+          futuro_d: [
+            { type: 'in', text: 'en serio' },
+            { type: 'in', text: 'seguís siendo igual de divertida' },
+            { type: 'in', text: 'igual de fuerte' },
+            { type: 'in', text: 'y tenés gente increíble a tu lado' },
+            { type: 'in', text: 'así que la próxima vez que dudes de vos' },
+            { type: 'in', text: 'acordate que tu yo del futuro te mandó un mensaje' },
+            { type: 'in', text: 'para decirte que sos más increíble de lo que creés' },
+            { type: 'in', text: 'cuidate mucho Paulina' },
+            { type: 'in', text: 'la mejor siempre fuiste vos 🔮💛' },
+            { type: 'end' }
+          ]
+        }
+      }
+    };
+
+    /* ═══════════════════════════════════
+       STATE
+    ═══════════════════════════════════ */
+    const completedChats = new Set();
+    let currentChat = null;
+    let isProcessing = false;
+
+    /* ═══════════════════════════════════
+       NAVIGATION
+    ═══════════════════════════════════ */
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => {
+        s.classList.remove('visible');
+        setTimeout(() => s.classList.add('hidden'), 400);
+      });
+      setTimeout(() => {
+        const next = document.getElementById(id);
+        next.classList.remove('hidden');
+        requestAnimationFrame(() => next.classList.add('visible'));
+      }, 420);
+    }
+
+    function openChat(chatId) {
+      if (completedChats.has(chatId) || isProcessing) return;
+      currentChat = chatId;
+      const chat = chats[chatId];
+
+      document.getElementById('chat-avatar').innerHTML = chat.emoji;
+      document.getElementById('chat-avatar').style.background = chat.avatarBg;
+      document.getElementById('chat-name').textContent = chat.name;
+      document.getElementById('chat-body').innerHTML = '';
+      document.getElementById('response-options').classList.add('hidden');
+      document.getElementById('response-options').innerHTML = '';
+
+      showScreen('chat-screen');
+
+      setTimeout(() => playMessages(chat.messages), 600);
+    }
+
+    function backToContacts() {
+      showScreen('contact-screen');
+      updateProgress();
+    }
+
+    /* ═══════════════════════════════════
+       MESSAGE PLAYBACK
+    ═══════════════════════════════════ */
+    function getTime() {
+      const now = new Date();
+      return now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+    }
+
+    async function playMessages(messages) {
+      isProcessing = true;
+      const body = document.getElementById('chat-body');
+      const statusEl = document.getElementById('chat-status');
+
+      for (let i = 0; i < messages.length; i++) {
+        const msg = messages[i];
+
+        if (msg.type === 'end') {
+          isProcessing = false;
+          markChatComplete();
+          return;
+        }
+
+        if (msg.type === 'choice') {
+          isProcessing = false;
+          statusEl.textContent = 'en l\u00ednea';
+          statusEl.classList.remove('online');
+          showChoices(msg.options);
+          return;
+        }
+
+        if (msg.type === 'in') {
+          // Show typing
+          statusEl.textContent = 'escribiendo...';
+          statusEl.classList.add('online');
+          const typing = document.createElement('div');
+          typing.className = 'typing-indicator';
+          typing.innerHTML = '<span></span><span></span><span></span>';
+          body.appendChild(typing);
+          body.scrollTop = body.scrollHeight;
+
+          await wait(800 + Math.random() * 800);
+
+          typing.remove();
+          statusEl.textContent = 'en l\u00ednea';
+          statusEl.classList.remove('online');
+
+          const bubble = document.createElement('div');
+          bubble.className = 'bubble bubble-in';
+          bubble.innerHTML = msg.text + '<span class="time">' + getTime() + '</span>';
+          body.appendChild(bubble);
+          body.scrollTop = body.scrollHeight;
+
+          await wait(400);
+        }
+
+        if (msg.type === 'out') {
+          await wait(300);
+          const bubble = document.createElement('div');
+          bubble.className = 'bubble bubble-out';
+          bubble.innerHTML = msg.text + '<span class="time">' + getTime() + '</span>';
+          body.appendChild(bubble);
+          body.scrollTop = body.scrollHeight;
+          await wait(400);
+        }
+      }
+      isProcessing = false;
+    }
+
+    function showChoices(options) {
+      const container = document.getElementById('response-options');
+      container.innerHTML = '<p>Eleg\u00ed tu respuesta</p>';
+      container.classList.remove('hidden');
+
+      options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'response-btn';
+        btn.textContent = opt.text;
+        btn.addEventListener('click', () => selectResponse(opt));
+        container.appendChild(btn);
+      });
+    }
+
+    function selectResponse(option) {
+      const container = document.getElementById('response-options');
+      container.classList.add('hidden');
+      container.innerHTML = '';
+
+      const body = document.getElementById('chat-body');
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble bubble-out';
+      bubble.innerHTML = option.text + '<span class="time">' + getTime() + '</span>';
+      body.appendChild(bubble);
+      body.scrollTop = body.scrollHeight;
+
+      const chat = chats[currentChat];
+      const nextMessages = chat.branches[option.next];
+
+      setTimeout(() => playMessages(nextMessages), 600);
+    }
+
+    /* ═══════════════════════════════════
+       COMPLETION
+    ═══════════════════════════════════ */
+    function markChatComplete() {
+      completedChats.add(currentChat);
+
+      const badge = document.getElementById('badge-' + currentChat);
+      if (badge) {
+        badge.outerHTML = '<span class="contact-check">\u2713</span>';
+      }
+
+      const item = document.querySelector('.contact-item[data-chat="' + currentChat + '"]');
+      if (item) item.classList.add('completed');
+
+      updateProgress();
+
+      if (completedChats.size === 4) {
+        setTimeout(() => {
+          showScreen('final-screen');
+          setTimeout(launchFinalCelebration, 600);
+        }, 2000);
+      }
+    }
+
+    function updateProgress() {
+      const bar = document.getElementById('progress-bar');
+      const pct = (completedChats.size / 4) * 100;
+      bar.style.width = pct + '%';
+    }
+
+    /* ═══════════════════════════════════
+       FINAL CELEBRATION
+    ═══════════════════════════════════ */
+    function launchFinalCelebration() {
+      const container = document.getElementById('final-hearts');
+      const emojis = ['\ud83d\udc9a', '\u2728', '\ud83d\udc9c', '\ud83d\udc9b', '\u2b50', '\ud83e\udd0d'];
+      const interval = setInterval(() => {
+        const span = document.createElement('span');
+        span.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        span.style.left = Math.random() * 100 + '%';
+        span.style.animationDuration = (5 + Math.random() * 5) + 's';
+        container.appendChild(span);
+        setTimeout(() => span.remove(), 10000);
+      }, 400);
+
+      setTimeout(() => clearInterval(interval), 15000);
+
+      const duration = 3000;
+      const end = Date.now() + duration;
+      const colors = ['#00a884', '#53bdeb', '#fbbf24', '#a855f7', '#4ade80'];
+
+      (function frame() {
+        confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 }, colors });
+        confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 }, colors });
+        if (Date.now() < end) requestAnimationFrame(frame);
+      })();
+    }
+
+    /* ═══════════════════════════════════
+       UTILS
+    ═══════════════════════════════════ */
+    function wait(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+  </script>
+</body>
+</html>
